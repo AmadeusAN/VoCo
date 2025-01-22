@@ -1,0 +1,13 @@
+/dataset/raw_dataset/
+.vscode
+/net/tridunet/
+/dataset/raw/
+/dataset/preprocessed/
+/dataset/patched/
+/dataset/pretrain/
+/tensorboard_log/
+/dataset/ensemble/
+/dataset/ensemble_crop/
+/dataset/lyh/
+__pycache__/
+*.pyc

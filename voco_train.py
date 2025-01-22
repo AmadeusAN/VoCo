@@ -22,21 +22,23 @@ from optimizers.lr_scheduler import WarmupCosineSchedule
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.tensorboard import SummaryWriter
-from utils.data_utils import *
-from utils.ops import *
-from utils.utils import AverageMeter, distributed_all_gather
+from voco_utils.data_utils import *
+from voco_utils.ops import *
+from net.pretrain.VoCo.voco_utils.voco_utils import AverageMeter, distributed_all_gather
 import torch.multiprocessing
+from utils import config
 
-torch.multiprocessing.set_sharing_strategy('file_system')
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
-os.environ['MASTER_ADDR'] = 'localhost'
-os.environ['MASTER_PORT'] = '28890'
+# multigpu setting
+torch.multiprocessing.set_sharing_strategy("file_system")
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["MASTER_ADDR"] = "localhost"
+os.environ["MASTER_PORT"] = "28890"
 
 import resource
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (8192, rlimit[1]))
-print('Setting resource limit:', str(resource.getrlimit(resource.RLIMIT_NOFILE)))
+print("Setting resource limit:", str(resource.getrlimit(resource.RLIMIT_NOFILE)))
 
 
 def main():
@@ -69,7 +71,9 @@ def main():
             else:
                 loss.backward()
                 if args.grad_clip:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), args.max_grad_norm
+                    )
                 optimizer.step()
 
             if args.lrdecay:
@@ -87,13 +91,25 @@ def main():
 
             if args.distributed:
                 if dist.get_rank() == 0:
-                    print("Step:{}/{}, Loss:{:.4f}, Time:{:.4f}".format
-                          (global_step, args.num_steps, loss, time() - t1))
+                    print(
+                        "Step:{}/{}, Loss:{:.4f}, Time:{:.4f}".format(
+                            global_step, args.num_steps, loss, time() - t1
+                        )
+                    )
             else:
-                print("Step:{}/{}, Loss:{:.4f}, pos:{:.4f}, neg:{:.4f}, base:{:.4f}, "
-                      "lr:{:.8f}, Time:{:.4f}".format(global_step, args.num_steps,
-                                                               run_loss.avg, pos_avg.avg, neg_avg.avg, base_avg.avg,
-                                                               lr, time() - t1))
+                print(
+                    "Step:{}/{}, Loss:{:.4f}, pos:{:.4f}, neg:{:.4f}, base:{:.4f}, "
+                    "lr:{:.8f}, Time:{:.4f}".format(
+                        global_step,
+                        args.num_steps,
+                        run_loss.avg,
+                        pos_avg.avg,
+                        neg_avg.avg,
+                        base_avg.avg,
+                        lr,
+                        time() - t1,
+                    )
+                )
 
             global_step += 1
             if args.distributed:
@@ -123,55 +139,113 @@ def main():
 
     roi = 64
     parser = argparse.ArgumentParser(description="PyTorch Training")
-    parser.add_argument("--logdir", default="logs", type=str, help="directory to save logs")
-    parser.add_argument("--epochs", default=100, type=int, help="number of training epochs")
-    parser.add_argument("--num_steps", default=250000, type=int, help="number of training iterations")
-    parser.add_argument("--eval_num", default=100, type=int, help="evaluation frequency")
+    parser.add_argument(
+        "--logdir", default=config.voco_logdir, type=str, help="directory to save logs"
+    )
+    parser.add_argument(
+        "--epochs", default=100, type=int, help="number of training epochs"
+    )
+    parser.add_argument(
+        "--num_steps", default=250000, type=int, help="number of training iterations"
+    )
+    parser.add_argument(
+        "--eval_num", default=100, type=int, help="evaluation frequency"
+    )
     parser.add_argument("--warmup_steps", default=5000, type=int, help="warmup steps")
-    parser.add_argument("--in_channels", default=1, type=int, help="number of input channels")
+    parser.add_argument(
+        "--in_channels", default=1, type=int, help="number of input channels"
+    )
     parser.add_argument("--feature_size", default=48, type=int, help="embedding size")
-    parser.add_argument("--dropout_path_rate", default=0.0, type=float, help="drop path rate")
-    parser.add_argument("--use_checkpoint", default=True, help="use gradient checkpointing to save memory")
-    parser.add_argument("--spatial_dims", default=3, type=int, help="spatial dimension of input data")
-    parser.add_argument("--a_min", default=-175.0, type=float, help="a_min in ScaleIntensityRanged")
-    parser.add_argument("--a_max", default=250.0, type=float, help="a_max in ScaleIntensityRanged")
-    parser.add_argument("--b_min", default=0.0, type=float, help="b_min in ScaleIntensityRanged")
-    parser.add_argument("--b_max", default=1.0, type=float, help="b_max in ScaleIntensityRanged")
-    parser.add_argument("--space_x", default=1.5, type=float, help="spacing in x direction")
-    parser.add_argument("--space_y", default=1.5, type=float, help="spacing in y direction")
-    parser.add_argument("--space_z", default=1.5, type=float, help="spacing in z direction")
-    parser.add_argument("--roi_x", default=roi, type=int, help="roi size in x direction")
-    parser.add_argument("--roi_y", default=roi, type=int, help="roi size in y direction")
-    parser.add_argument("--roi_z", default=roi, type=int, help="roi size in z direction")
-    parser.add_argument("--batch_size", default=2, type=int, help="number of batch size")
-    parser.add_argument("--sw_batch_size", default=2, type=int, help="number of sliding window batch size")
+    parser.add_argument(
+        "--dropout_path_rate", default=0.0, type=float, help="drop path rate"
+    )
+    parser.add_argument(
+        "--use_checkpoint",
+        default=True,
+        help="use gradient checkpointing to save memory",
+    )
+    parser.add_argument(
+        "--spatial_dims", default=3, type=int, help="spatial dimension of input data"
+    )
+    parser.add_argument(
+        "--a_min", default=-175.0, type=float, help="a_min in ScaleIntensityRanged"
+    )
+    parser.add_argument(
+        "--a_max", default=250.0, type=float, help="a_max in ScaleIntensityRanged"
+    )
+    parser.add_argument(
+        "--b_min", default=0.0, type=float, help="b_min in ScaleIntensityRanged"
+    )
+    parser.add_argument(
+        "--b_max", default=1.0, type=float, help="b_max in ScaleIntensityRanged"
+    )
+    parser.add_argument(
+        "--space_x", default=1.5, type=float, help="spacing in x direction"
+    )
+    parser.add_argument(
+        "--space_y", default=1.5, type=float, help="spacing in y direction"
+    )
+    parser.add_argument(
+        "--space_z", default=1.5, type=float, help="spacing in z direction"
+    )
+    parser.add_argument(
+        "--roi_x", default=roi, type=int, help="roi size in x direction"
+    )
+    parser.add_argument(
+        "--roi_y", default=roi, type=int, help="roi size in y direction"
+    )
+    parser.add_argument(
+        "--roi_z", default=roi, type=int, help="roi size in z direction"
+    )
+    parser.add_argument(
+        "--batch_size", default=2, type=int, help="number of batch size"
+    )
+    parser.add_argument(
+        "--sw_batch_size",
+        default=2,
+        type=int,
+        help="number of sliding window batch size",
+    )
     parser.add_argument("--lr", default=1e-4, type=float, help="learning rate")
     parser.add_argument("--decay", default=0.1, type=float, help="decay rate")
     parser.add_argument("--momentum", default=0.9, type=float, help="momentum")
     parser.add_argument("--lrdecay", default=True, help="enable learning rate decay")
-    parser.add_argument("--max_grad_norm", default=1.0, type=float, help="maximum gradient norm")
+    parser.add_argument(
+        "--max_grad_norm", default=1.0, type=float, help="maximum gradient norm"
+    )
     parser.add_argument("--loss_type", default="SSL", type=str)
-    parser.add_argument("--opt", default="adamw", type=str, help="optimization algorithm")
+    parser.add_argument(
+        "--opt", default="adamw", type=str, help="optimization algorithm"
+    )
     parser.add_argument("--lr_schedule", default="warmup_cosine", type=str)
     # './runs/logs_10k/model_current_epoch.pt'
-    parser.add_argument("--resume", default=None, type=str,
-                        help="resume training")
+    parser.add_argument("--resume", default=None, type=str, help="resume training")
     parser.add_argument("--local_rank", type=int, default=0, help="local rank")
     parser.add_argument("--grad_clip", action="store_true", help="gradient clip")
     parser.add_argument("--noamp", default=True, help="do NOT use amp for training")
-    parser.add_argument("--dist-url", default="env://", help="url used to set up distributed training")
-    parser.add_argument("--smartcache_dataset", default=False, help="use monai smartcache Dataset")
-    parser.add_argument("--cache_dataset", action="store_true", help="use monai cache Dataset")
+    parser.add_argument(
+        "--dist-url", default="env://", help="url used to set up distributed training"
+    )
+    parser.add_argument(
+        "--smartcache_dataset", default=False, help="use monai smartcache Dataset"
+    )
+    parser.add_argument(
+        "--cache_dataset", action="store_true", help="use monai cache Dataset"
+    )
 
+    print(config)
     args = parser.parse_args()
     logdir = args.logdir
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(config.gpu_id)
     torch.cuda.set_device(0)
 
     args.amp = True
     torch.backends.cudnn.benchmark = True
     # torch.autograd.set_detect_anomaly(True)
     args.distributed = False
+
+    # if u want to activate multigpu, then u should write WORLD_SIZE in the os.environ
     if "WORLD_SIZE" in os.environ:
         args.distributed = int(os.environ["WORLD_SIZE"]) > 1
     args.world_size = 1
@@ -193,33 +267,46 @@ def main():
 
     if args.rank == 0:
         os.makedirs(logdir, exist_ok=True)
-    logger = init_log('global', logging.INFO)
+    logger = init_log("global", logging.INFO)
     logger.propagate = 0
 
+    # loading model
     model = VoCoHead(args)
     model.cuda()
 
+    # loading optimizer
     if args.opt == "adam":
-        optimizer = optim.Adam(params=model.parameters(), lr=args.lr, weight_decay=args.decay)
+        optimizer = optim.Adam(
+            params=model.parameters(), lr=args.lr, weight_decay=args.decay
+        )
 
     elif args.opt == "adamw":
         optimizer = optim.AdamW(params=model.parameters(), lr=args.lr, amsgrad=True)
 
     elif args.opt == "sgd":
-        optimizer = optim.SGD(params=model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.decay)
+        optimizer = optim.SGD(
+            params=model.parameters(),
+            lr=args.lr,
+            momentum=args.momentum,
+            weight_decay=args.decay,
+        )
 
     global_step = 0
+    # try to resume training
     if args.resume:
-        print('resume from previous checkpoints')
+        print("resume from previous checkpoints")
         model_pth = args.resume
         model_dict = torch.load(model_pth)
         model.load_state_dict(model_dict, strict=False)
         global_step = model_dict["global_step"]
         # optimizer = model_dict["optimizer"]["state_dict"]
 
+    # loading scheduler
     if args.lrdecay:
         if args.lr_schedule == "warmup_cosine":
-            scheduler = WarmupCosineSchedule(optimizer, warmup_steps=args.warmup_steps, t_total=args.num_steps)
+            scheduler = WarmupCosineSchedule(
+                optimizer, warmup_steps=args.warmup_steps, t_total=args.num_steps
+            )
 
         elif args.lr_schedule == "poly":
 
@@ -228,10 +315,12 @@ def main():
 
             scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambdas)
 
+    # loading DDP
     if args.distributed:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         model = DistributedDataParallel(model, device_ids=[args.local_rank])
 
+    # loading dataloader
     train_loader = get_loader(args)
 
     best_val = 1e8
@@ -240,8 +329,14 @@ def main():
     else:
         scaler = None
     while global_step < args.num_steps:
-        global_step, loss, best_val = train(args, global_step, train_loader, best_val, scaler)
-    checkpoint = {"epoch": args.epochs, "state_dict": model.state_dict(), "optimizer": optimizer.state_dict()}
+        global_step, loss, best_val = train(
+            args, global_step, train_loader, best_val, scaler
+        )
+    checkpoint = {
+        "epoch": args.epochs,
+        "state_dict": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+    }
 
     if args.distributed:
         if dist.get_rank() == 0:

@@ -13,7 +13,12 @@ import torch
 import torch.nn as nn
 import numpy as np
 from monai.networks.nets.swin_unetr import *
-from monai.networks.blocks import PatchEmbed, UnetOutBlock, UnetrBasicBlock, UnetrUpBlock
+from monai.networks.blocks import (
+    PatchEmbed,
+    UnetOutBlock,
+    UnetrBasicBlock,
+    UnetrUpBlock,
+)
 from monai.networks.nets.swin_unetr import SwinTransformer as SwinViT
 from monai.utils import ensure_tuple_rep
 import argparse
@@ -26,12 +31,12 @@ class projection_head(nn.Module):
         self.layer1 = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim, affine=False, track_running_stats=False),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
         self.layer2 = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim, affine=False, track_running_stats=False),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
         self.layer3 = nn.Sequential(
             nn.Linear(hidden_dim, out_dim),
@@ -75,7 +80,7 @@ class Swin(nn.Module):
             spatial_dims=args.spatial_dims,
             use_v2=True,
         )
-        norm_name = 'instance'
+        norm_name = "instance"
         self.encoder1 = UnetrBasicBlock(
             spatial_dims=args.spatial_dims,
             in_channels=args.in_channels,
@@ -168,7 +173,7 @@ class VoCoHead(nn.Module):
         ## no scheduler here
         momentum = 0.9
         for param, param_t in zip(self.student.parameters(), self.teacher.parameters()):
-            param_t.data = momentum * param_t.data + (1. - momentum) * param.data
+            param_t.data = momentum * param_t.data + (1.0 - momentum) * param.data
 
     def forward(self, img, crops, labels):
         batch_size = labels.size()[0]
@@ -191,16 +196,23 @@ class VoCoHead(nn.Module):
         for i in range(batch_size):
             label = labels[i]
 
-            x_stu, bases_stu = x_stu_all[i * sw_size:(i + 1) * sw_size], bases_stu_all[i * 16:(i + 1) * 16]
-            x_tea, bases_tea = x_tea_all[i * sw_size:(i + 1) * sw_size], bases_tea_all[i * 16:(i + 1) * 16]
+            x_stu, bases_stu = (
+                x_stu_all[i * sw_size : (i + 1) * sw_size],
+                bases_stu_all[i * 16 : (i + 1) * 16],
+            )
+            x_tea, bases_tea = (
+                x_tea_all[i * sw_size : (i + 1) * sw_size],
+                bases_tea_all[i * 16 : (i + 1) * 16],
+            )
 
+            # Accoording to paper. logits come from cosine similarity, followed by ReLU
             logits1 = online_assign(x_stu, bases_tea)
             logits2 = online_assign(x_tea, bases_stu)
 
             logits = (logits1 + logits2) * 0.5
 
             if i == 0:
-                print('labels and logits:', label[0].data, logits[0].data)
+                print("labels and logits:", label[0].data, logits[0].data)
 
             pos_loss, neg_loss = ce_loss(label, logits)
             pos += pos_loss
@@ -238,9 +250,11 @@ def regularization_loss(bases):
     for i in range(k - 1):
         for j in range(i + 1, k):
             num += 1
-            simi = F.cosine_similarity(bases[i].unsqueeze(0), bases[j].unsqueeze(0).detach(), dim=1)
+            simi = F.cosine_similarity(
+                bases[i].unsqueeze(0), bases[j].unsqueeze(0).detach(), dim=1
+            )
             simi = F.relu(simi)
-            loss_all += simi ** 2
+            loss_all += simi**2
     loss_all = loss_all / num
 
     return loss_all
@@ -248,10 +262,10 @@ def regularization_loss(bases):
 
 def ce_loss(labels, logits):
     pos_dis = torch.abs(labels - logits)
-    pos_loss = - labels * torch.log(1 - pos_dis + 1e-6)
+    pos_loss = -labels * torch.log(1 - pos_dis + 1e-6)
     pos_loss = pos_loss.sum() / (labels.sum() + 1e-6)
 
     neg_lab = (labels == 0).long()
-    neg_loss = neg_lab * (logits ** 2)
+    neg_loss = neg_lab * (logits**2)
     neg_loss = neg_loss.sum() / (neg_lab.sum() + 1e-6)
     return pos_loss, neg_loss
