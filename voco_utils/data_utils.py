@@ -250,7 +250,7 @@ def get_loader(args):
     manifest3 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/RAOS/RAOS-Real/CancerImages(Set1)/manifest.json"
     manifest4 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/MM-WHS/MM-WHS 2017 Dataset/manifest.json"
     manifest5 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/MSD/manifest.json"
-    manifest6 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/LUNA16/mainfest.json"
+    manifest6 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/LUNA16/manifest.json"
 
     manifest_list = [manifest1, manifest2, manifest3, manifest4, manifest5, manifest6]
     datalist = []

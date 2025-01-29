@@ -198,11 +198,11 @@ def main():
         "--roi_z", default=roi, type=int, help="roi size in z direction"
     )
     parser.add_argument(
-        "--batch_size", default=2, type=int, help="number of batch size"
+        "--batch_size", default=1, type=int, help="number of batch size"
     )
     parser.add_argument(
         "--sw_batch_size",
-        default=2,
+        default=1,
         type=int,
         help="number of sliding window batch size",
     )
