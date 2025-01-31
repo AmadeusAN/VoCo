@@ -245,12 +245,13 @@ def get_loader(args):
     datadir7 = "./data/HNSCC_convert_v1"
 
     # convert to custom dataset
-    manifest1 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/abdomenct1k/manifest.json"
-    manifest2 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/LITS/media/nas/01_Datasets/CT/LITS/manifest.json"
-    manifest3 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/RAOS/RAOS-Real/CancerImages(Set1)/manifest.json"
-    manifest4 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/MM-WHS/MM-WHS 2017 Dataset/manifest.json"
-    manifest5 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/MSD/manifest.json"
-    manifest6 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/LUNA16/manifest.json"
+    base_dir = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset"
+    manifest1 = f"{base_dir}/abdomenct1k/manifest.json"
+    manifest2 = f"{base_dir}/LITS/media/nas/01_Datasets/CT/LITS/manifest.json"
+    manifest3 = f"{base_dir}/RAOS/RAOS-Real/CancerImages(Set1)/manifest.json"
+    manifest4 = f"{base_dir}/MM-WHS/MM-WHS 2017 Dataset/manifest.json"
+    manifest5 = f"{base_dir}/MSD/manifest.json"
+    manifest6 = f"{base_dir}/LUNA16/manifest.json"
 
     manifest_list = [manifest1, manifest2, manifest3, manifest4, manifest5, manifest6]
     datalist = []
