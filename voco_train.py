@@ -232,12 +232,16 @@ def main():
     parser.add_argument(
         "--cache_dataset", action="store_true", help="use monai cache Dataset"
     )
+    parser.add_argument(
+        "--ddp", action="store_true", help="use distributed data parallel"
+    )
 
     print(config)
     args = parser.parse_args()
     logdir = args.logdir
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(config.gpu_id)
+    # 默认使用可以看到的第一个GPU
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(config.device_ids)[1:-1]
     torch.cuda.set_device(0)
 
     args.amp = True
@@ -246,6 +250,13 @@ def main():
     args.distributed = False
 
     # if u want to activate multigpu, then u should write WORLD_SIZE in the os.environ
+    if args.ddp:
+        os.environ["WORLD_SIZE"] = str(len(config.device_ids))
+        # os.environ["MASTER_ADDR"] = "localhost"
+        # os.environ["MASTER_PORT"] = "12355"
+        args.local_rank = int(os.environ["LOCAL_RANK"])
+        print("WORLD_SIZE:", os.environ["WORLD_SIZE"])
+        print("LOCAL_RANK:", os.environ["LOCAL_RANK"])
     if "WORLD_SIZE" in os.environ:
         args.distributed = int(os.environ["WORLD_SIZE"]) > 1
     args.world_size = 1
