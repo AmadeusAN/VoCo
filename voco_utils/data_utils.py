@@ -250,10 +250,10 @@ def get_loader(args):
     manifest2 = f"{base_dir}/LITS/media/nas/01_Datasets/CT/LITS/manifest.json"
     manifest3 = f"{base_dir}/RAOS/RAOS-Real/CancerImages(Set1)/manifest.json"
     manifest4 = f"{base_dir}/MM-WHS/MM-WHS 2017 Dataset/manifest.json"
-    manifest5 = f"{base_dir}/MSD/manifest.json"
+    # manifest5 = f"{base_dir}/MSD/manifest.json"
     manifest6 = f"{base_dir}/LUNA16/manifest.json"
 
-    manifest_list = [manifest1, manifest2, manifest3, manifest4, manifest5, manifest6]
+    manifest_list = [manifest1, manifest2, manifest3, manifest4, manifest6]
     datalist = []
     for manifest in manifest_list:
         with Path(manifest).open("r") as f:
