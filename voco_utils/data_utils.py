@@ -22,6 +22,7 @@ from pathlib import Path
 import json
 from utils import config
 import os
+from itertools import chain
 
 
 def get_loader_1k(args):
@@ -245,23 +246,17 @@ def get_loader(args):
     datadir7 = "./data/HNSCC_convert_v1"
 
     # convert to custom dataset
-    base_dir = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset"
-    manifest1 = f"{base_dir}/abdomenct1k/manifest.json"
-    manifest2 = f"{base_dir}/LITS/media/nas/01_Datasets/CT/LITS/manifest.json"
-    manifest3 = f"{base_dir}/RAOS/RAOS-Real/CancerImages(Set1)/manifest.json"
-    manifest4 = f"{base_dir}/MM-WHS/MM-WHS 2017 Dataset/manifest.json"
-    # manifest5 = f"{base_dir}/MSD/manifest.json"
-    manifest6 = f"{base_dir}/LUNA16/manifest.json"
+    manifest1 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/RAOS/RAOS-Real/CancerImages(Set1)/dataset.json"
+    manifest2 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/LITS/media/nas/01_Datasets/CT/LITS/dataset.json"
+    manifest3 = "/public1/cjh/workspace/AbdominalSegmentation/dataset/raw_dataset/abdomenct1k/dataset.json"
 
-    manifest_list = [manifest1, manifest2, manifest3, manifest4, manifest6]
-    datalist = []
-    for manifest in manifest_list:
-        with Path(manifest).open("r") as f:
-            json_f = json.load(f)
-        json_f = json_f["training"]
-        datalist += [{"image": item["image"]} for item in json_f]
-
-    # datalist1 = load_datalist_from_manifest(manifest1)
+    manifest_list = [manifest1, manifest2, manifest3]
+    manifest_list = [
+        load_decathlon_datalist(manifest, False, "training")
+        for manifest in [manifest1, manifest2, manifest3]
+    ]
+    train_list = list(chain.from_iterable(manifest_list))
+    datalist = [{"image": item["image"]} for item in train_list]
     num_workers = 8
     # # laod_decathlon_datalist 看样子仅是 json 中的相对路径加上一个统一的前缀。
     # # datalist1 = load_decathlon_datalist(jsonlist1, False, "training", base_dir=datadir1)

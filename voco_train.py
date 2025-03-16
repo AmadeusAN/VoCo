@@ -155,7 +155,9 @@ def main():
     parser.add_argument(
         "--in_channels", default=1, type=int, help="number of input channels"
     )
-    parser.add_argument("--feature_size", default=48, type=int, help="embedding size")
+    parser.add_argument(
+        "--feature_size", default=config.vit_embed_dim, type=int, help="embedding size"
+    )
     parser.add_argument(
         "--dropout_path_rate", default=0.0, type=float, help="drop path rate"
     )
@@ -236,7 +238,7 @@ def main():
         "--ddp", action="store_true", help="use distributed data parallel"
     )
 
-    print(config)
+    # print(config)
     args = parser.parse_args()
     logdir = args.logdir
 

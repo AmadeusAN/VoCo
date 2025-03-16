@@ -23,10 +23,11 @@ from monai.networks.nets.swin_unetr import SwinTransformer as SwinViT
 from monai.utils import ensure_tuple_rep
 import argparse
 import torch.nn.functional as F
+from utils import config
 
 
 class projection_head(nn.Module):
-    def __init__(self, in_dim=768, hidden_dim=2048, out_dim=2048):
+    def __init__(self, in_dim=864, hidden_dim=2048, out_dim=2048):
         super().__init__()
         self.layer1 = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
@@ -69,7 +70,7 @@ class Swin(nn.Module):
             window_size=window_size,
             patch_size=patch_size,
             depths=[2, 2, 2, 2],
-            num_heads=[3, 6, 12, 24],
+            num_heads=config.vit_heads,
             mlp_ratio=4.0,
             qkv_bias=True,
             drop_rate=0.0,
@@ -131,7 +132,7 @@ class Swin(nn.Module):
             res_block=True,
         )
 
-        self.proj_head = projection_head(in_dim=1152, hidden_dim=2048, out_dim=2048)
+        self.proj_head = projection_head(in_dim=576, hidden_dim=1024, out_dim=1024)
 
     def forward_encs(self, encs):
         b = encs[0].size()[0]
