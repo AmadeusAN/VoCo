@@ -132,7 +132,7 @@ class Swin(nn.Module):
             res_block=True,
         )
 
-        self.proj_head = projection_head(in_dim=576, hidden_dim=1024, out_dim=1024)
+        self.proj_head = projection_head(in_dim=864, hidden_dim=1024, out_dim=1024)
 
     def forward_encs(self, encs):
         b = encs[0].size()[0]
