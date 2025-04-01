@@ -182,13 +182,22 @@ def main():
         "--b_max", default=1.0, type=float, help="b_max in ScaleIntensityRanged"
     )
     parser.add_argument(
-        "--space_x", default=1.5, type=float, help="spacing in x direction"
+        "--space_x",
+        default=config.resample_spacing[0],
+        type=float,
+        help="spacing in x direction",
     )
     parser.add_argument(
-        "--space_y", default=1.5, type=float, help="spacing in y direction"
+        "--space_y",
+        default=config.resample_spacing[1],
+        type=float,
+        help="spacing in y direction",
     )
     parser.add_argument(
-        "--space_z", default=1.5, type=float, help="spacing in z direction"
+        "--space_z",
+        default=config.resample_spacing[2],
+        type=float,
+        help="spacing in z direction",
     )
     parser.add_argument(
         "--roi_x", default=roi, type=int, help="roi size in x direction"
