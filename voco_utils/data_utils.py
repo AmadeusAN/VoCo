@@ -391,7 +391,7 @@ def get_loader(args):
         sampler=train_sampler,
         shuffle=True,
         drop_last=True,
-        pin_memory=True,
+        # pin_memory=True,
     )
 
     return train_loader
