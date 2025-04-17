@@ -29,10 +29,10 @@ import torch.multiprocessing
 from utils import config
 
 # multigpu setting
-torch.multiprocessing.set_sharing_strategy("file_system")
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ["MASTER_ADDR"] = "localhost"
-os.environ["MASTER_PORT"] = "28890"
+# torch.multiprocessing.set_sharing_strategy("file_system")
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["MASTER_ADDR"] = "localhost"
+# os.environ["MASTER_PORT"] = "28890"
 
 import resource
 
@@ -252,7 +252,7 @@ def main():
     logdir = args.logdir
 
     # 默认使用可以看到的第一个GPU
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(config.device_ids)[1:-1]
+    # os.environ["CUDA_VISIBLE_DEVICES"] = str(config.device_ids)[1:-1]
     torch.cuda.set_device(0)
 
     args.amp = True
