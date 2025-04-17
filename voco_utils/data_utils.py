@@ -247,17 +247,19 @@ def get_loader(args):
 
     # convert to custom dataset
     project_path = config.project_path
-    manifest1 = (
-        project_path
-        / "dataset/raw_dataset/RAOS/RAOS-Real/CancerImages(Set1)/dataset.json"
-    )
+
+    # manifest4 = (
+    #     project_path
+    #     / "dataset/raw_dataset/RAOS/RAOS-Real/CancerImages(Set1)/dataset.json"
+    # )
+
+    manifest1 = project_path / "dataset/raw_dataset/AMOS/amos22/dataset.json"
     manifest2 = (
         project_path
         / "dataset/raw_dataset/LITS/media/nas/01_Datasets/CT/LITS/dataset.json"
     )
     manifest3 = project_path / "dataset/raw_dataset/abdomenct1k/dataset.json"
 
-    manifest_list = [manifest1, manifest2, manifest3]
     manifest_list = [
         load_decathlon_datalist(manifest, False, "training")
         for manifest in [manifest1, manifest2, manifest3]
