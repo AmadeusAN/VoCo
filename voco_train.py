@@ -29,7 +29,7 @@ import torch.multiprocessing
 from utils import config
 
 # multigpu setting
-# torch.multiprocessing.set_sharing_strategy("file_system")
+torch.multiprocessing.set_sharing_strategy("file_system")
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # os.environ["MASTER_ADDR"] = "localhost"
 # os.environ["MASTER_PORT"] = "28890"
