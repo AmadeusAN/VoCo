@@ -27,6 +27,7 @@ from voco_utils.ops import *
 from net.pretrain.VoCo.voco_utils.voco_utils import AverageMeter, distributed_all_gather
 import torch.multiprocessing
 from utils import config
+from thop import profile, clever_format
 
 # multigpu setting
 torch.multiprocessing.set_sharing_strategy("file_system")
@@ -41,7 +42,7 @@ resource.setrlimit(resource.RLIMIT_NOFILE, (8192, rlimit[1]))
 print("Setting resource limit:", str(resource.getrlimit(resource.RLIMIT_NOFILE)))
 
 
-def main():
+def main(thop_test: bool = False):
     def save_ckp(state, checkpoint_dir):
         torch.save(state, checkpoint_dir)
 
@@ -56,6 +57,14 @@ def main():
             img, labels, crops = batch
             img, crops = concat_image(img), concat_image(crops)
             # print(img.size(), crops.size(), labels.size())
+
+            if thop_test:
+                img, crops, labels = img.cpu(), crops.cpu(), labels.cpu()
+                model.cpu()
+                macs, params = profile(model, inputs=(img, crops, labels))
+                macs, params = clever_format([macs, params], "%.3f")
+                print(macs, params)
+                return
             img, crops, labels = img.cuda(), crops.cuda(), labels.cuda()
 
             with autocast(enabled=args.amp):
@@ -354,6 +363,9 @@ def main():
         global_step, loss, best_val = train(
             args, global_step, train_loader, best_val, scaler
         )
+        if thop_test:
+            print("exec thop test")
+            return
     checkpoint = {
         "epoch": args.epochs,
         "state_dict": model.state_dict(),
@@ -393,4 +405,4 @@ def init_log(name, level=logging.INFO):
 
 
 if __name__ == "__main__":
-    main()
+    main(thop_test=True)
