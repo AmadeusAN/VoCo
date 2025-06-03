@@ -59,9 +59,12 @@ def main(thop_test: bool = False):
             # print(img.size(), crops.size(), labels.size())
 
             if thop_test:
+                b = img.shape[0]
+                print(f"batch size is {b}")
                 img, crops, labels = img.cpu(), crops.cpu(), labels.cpu()
                 model.cpu()
                 macs, params = profile(model, inputs=(img, crops, labels))
+                macs, params = macs / b, params / b
                 macs, params = clever_format([macs, params], "%.3f")
                 print(macs, params)
                 return
